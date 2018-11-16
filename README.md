@@ -9,7 +9,7 @@ cd $GOPATH/github.com/weiwenwang/DiyProtocol/example/server/
 
 go run server.go
 
-[![server](https://i.loli.net/2018/11/16/5bee907d292ad.png)](https://asciinema.org/a/hSbedRIR4MXBr7aTayBwDKbvj)
+[![server](https://i.loli.net/2018/11/16/5bee907d292ad.png)](https://asciinema.org/a/j146eF0OYuaNpOWP9qgIyspoV)
 
 
 
