@@ -10,18 +10,18 @@ import (
 )
 
 const HEAD_SIZE = 2
-const HEADER = "BEGIN"
 
 type Buffer struct {
 	reader io.Reader
+	header string
 	buf    []byte
 	start  int
 	end    int
 }
 
-func NewBuffer(reader io.Reader, len int) *Buffer {
+func NewBuffer(reader io.Reader, header string, len int) *Buffer {
 	buf := make([]byte, len)
-	return &Buffer{reader, buf, 0, 0}
+	return &Buffer{reader, header, buf, 0, 0}
 }
 
 // grow 将有用的字节前移
@@ -58,10 +58,10 @@ func (b *Buffer) read(offset, n int) ([]byte) {
 //从reader里面读取数据，如果reader阻塞，会发生阻塞
 func (b *Buffer) readFromReader() (int, error) {
 	n, err := b.reader.Read(b.buf[b.end:])
-	fmt.Println("读到n", n)
+	//fmt.Println("本次读取数据的长度:", n)
 	if (err != nil) {
 		if (err.Error() == "EOF") { // 发送端断开了
-			fmt.Println("close")
+			fmt.Println("对等方关闭了")
 			os.Exit(1)
 		}
 		fmt.Println(err.Error())
@@ -92,17 +92,17 @@ func (buffer *Buffer) Read(msg chan string) (error) {
 
 func (buffer *Buffer) checkMsg(msg chan string) (bool) {
 	var isBreak bool
-	HEADER_LENG := HEAD_SIZE + len(HEADER)
+	HEADER_LENG := HEAD_SIZE + len(buffer.header)
 	headBuf, err1 := buffer.seek(HEADER_LENG)
 	if err1 != nil { // 一个消息头都不够， 跳出去继续读吧
 		return false
 	}
-	if (string(headBuf[:len(HEADER)]) == HEADER) {
-		fmt.Println("头对了")
+	if (string(headBuf[:len(buffer.header)]) == buffer.header) { // 判断消息头正确性
+
 	} else {
-		fmt.Println("头不对")
+
 	}
-	contentSize := int(binary.BigEndian.Uint16(headBuf[len(HEADER):]))
+	contentSize := int(binary.BigEndian.Uint16(headBuf[len(buffer.header):]))
 	if (buffer.len() >= contentSize-HEADER_LENG) { // 一个消息体也是够的
 		contentBuf := buffer.read(HEADER_LENG, contentSize) // 把消息读出来，把start往后移
 		msg <- string(contentBuf)
