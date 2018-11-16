@@ -1,35 +1,22 @@
 # DiyProtocol
 
-### tcp/udp介绍
 
-Tcp是字节流协议, 数据传输像流水一样没有边界, 那么对等方在一次数据读取后,无法分辨读取是一个消息还是多个，
-或者是不足一个, 那么对等方拿到"残缺"消息就不知道如何处理.
-
-Udp是基于消息的传输服务，每个消息就是一个报文，是有边界的，对等方每次接受都是一个完整的消息.
-这样就需要我们在应用层,
-自己来区分.
-
-### 粘包是如何出现的?
-1. 内核缓存区不足以容乃一个消息
-2. MTU
-3. M
-
-
-一般有三种常见的方式
-#### 1. 定长消息
-发送端和接收端约定消息长度, 缺点: 消息很短时, 效率很低, 浪费带宽
-
-#### 2. 特殊标志作为结束标志
-ftp协议就是这种方式, 缺点: 消息内容不能含有这种特殊标志, 会提前终止消息。 redis是如何解决类似的问题的呢, redis自定义
-了动态字符串, 里面提到是二进制安全的, 意思就是字符串里面可以含有空字符(assic码为0), 原因就是它记录了这个字符串的长度,
-其实也就是下面说的第三种方式
-
-#### 3. 定长的包头 + 变长的包体, 包头中写入包体的长度, 本文主要介绍这种方式:
-
-![tcp字节流](https://i.loli.net/2018/11/15/5bed7f16bfa3c.png)
-
-
-### 代码
+### 演示
 
 go get github.com/weiwenwang/DiyProtocol
-本人附上一个demo, 里面代码注释详细.
+
+cd $GOPATH/github.com/weiwenwang/DiyProtocol/example/server/
+
+go run server.go
+
+[![go-min-chat]](https://asciinema.org/a/j146eF0OYuaNpOWP9qgIyspoV)
+
+
+
+cd $GOPATH/github.com/weiwenwang/DiyProtocol/example/client/
+
+go run client.go
+
+[![go-min-chat]](https://asciinema.org/a/MFLd5a8t1ULrDnvj1m624DAaS)
+
+
