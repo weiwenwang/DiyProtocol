@@ -41,5 +41,6 @@ func handle(conn net.Conn) {
 }
 
 func doMsg(conn net.Conn, str string) {
+	// conn.Write() 这里可能要发送点什么到对等方
 	fmt.Println("length:", len(str))
 }
