@@ -4,8 +4,8 @@ import (
 	"net"
 	"fmt"
 	"encoding/binary"
+	"github.com/weiwenwang/DiyProtocol/example"
 	"bytes"
-	"server/buffer"
 	"time"
 )
 
@@ -21,12 +21,12 @@ func main() {
 		binary.BigEndian.PutUint16(headBytes, uint16(headSize))
 		var buffer_client bytes.Buffer
 
-		buffer_client.Write([]byte(buffer.HEADER))
+		buffer_client.Write([]byte(example.HEADER))
 		buffer_client.Write(headBytes)
 		buffer_client.WriteString(v)
 		b3 := buffer_client.Bytes() //得到了b1+b2的结果
 		conn.Write(b3)
-		fmt.Println("第", k, "个消息", "消息头长:", len(buffer.HEADER)+len(headBytes), "消息体长:", headSize)
+		fmt.Println("第", k, "个消息", "消息头长:", len(example.HEADER)+len(headBytes), "消息体长:", headSize)
 		time.Sleep(500 * time.Millisecond)
 	}
 }
