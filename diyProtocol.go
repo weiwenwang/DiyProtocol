@@ -12,16 +12,17 @@ import (
 const HEAD_SIZE = 2
 
 type Buffer struct {
-	reader io.Reader
-	header string
-	buf    []byte
-	start  int
-	end    int
+	reader     io.Reader
+	header     string
+	buf        []byte
+	buf_length int
+	start      int
+	end        int
 }
 
 func NewBuffer(reader io.Reader, header string, len int) *Buffer {
 	buf := make([]byte, len)
-	return &Buffer{reader, header, buf, 0, 0}
+	return &Buffer{reader, header, buf, len, 0, 0}
 }
 
 // grow 将有用的字节前移
@@ -57,6 +58,10 @@ func (b *Buffer) read(offset, n int) ([]byte) {
 
 //从reader里面读取数据，如果reader阻塞，会发生阻塞
 func (b *Buffer) readFromReader() (int, error) {
+	if b.end == b.buf_length {
+		fmt.Printf("一个完整的数据包太长已经超过你定义的example.BUFFER_LENGTH(%d)\n", b.buf_length)
+		os.Exit(1)
+	}
 	n, err := b.reader.Read(b.buf[b.end:])
 	//fmt.Println("本次读取数据的长度:", n)
 	if (err != nil) {

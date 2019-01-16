@@ -25,7 +25,11 @@ func main() {
 		buffer_client.Write(headBytes)
 		buffer_client.WriteString(v)
 		b3 := buffer_client.Bytes() //得到了b1+b2的结果
-		conn.Write(b3)
+		_, err := conn.Write(b3)
+		if err != nil {
+			panic(err)
+		}
+
 		fmt.Println("第", k, "个消息", "消息头长:", len(example.HEADER)+len(headBytes), "消息体长:", headSize)
 		time.Sleep(500 * time.Millisecond)
 	}

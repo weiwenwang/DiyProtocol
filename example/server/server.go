@@ -8,9 +8,6 @@ import (
 	"github.com/weiwenwang/DiyProtocol/example"
 )
 
-const BUFFER_LENGTH = 1024
-const CHAN_MSG_COUNT = 10
-
 func main() {
 	addr := fmt.Sprintf("%s:%s", "127.0.0.1", "8080")
 	listen, err1 := net.Listen("tcp", addr)
@@ -29,8 +26,8 @@ func main() {
 }
 
 func handle(conn net.Conn) {
-	msg := make(chan string, CHAN_MSG_COUNT)                      // 这里设置消息channel可以容纳10个消息
-	buffer1 := DiyProtocol.NewBuffer(conn, example.HEADER, 1024) // 缓存区设置1024字节， 如果单个消息大于这个值就不能接受了
+	msg := make(chan string, example.CHAN_MSG_COUNT)                              // 这里设置消息channel可以容纳10个消息
+	buffer1 := DiyProtocol.NewBuffer(conn, example.HEADER, example.BUFFER_LENGTH) // 缓存区设置1024字节， 如果单个消息大于这个值就不能接受了
 	var count int
 	for {
 		select {
