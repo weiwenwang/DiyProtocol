@@ -5,11 +5,10 @@ import (
 	"encoding/binary"
 	"io"
 	"errors"
-	"os"
 	"time"
 )
 
-const HEAD_SIZE = 2
+const HEAD_SIZE = 4
 
 type Buffer struct {
 	reader     io.Reader
@@ -57,65 +56,54 @@ func (b *Buffer) read(offset, n int) ([]byte) {
 }
 
 //从reader里面读取数据，如果reader阻塞，会发生阻塞
-func (b *Buffer) readFromReader() (int, error) {
+func (b *Buffer) readFromReader() (error) {
 	if b.end == b.buf_length {
-		fmt.Printf("一个完整的数据包太长已经超过你定义的example.BUFFER_LENGTH(%d)\n", b.buf_length)
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("一个完整的数据包太长已经超过你定义的example.BUFFER_LENGTH(%d)\n", b.buf_length))
 	}
 	n, err := b.reader.Read(b.buf[b.end:])
-	//fmt.Println("本次读取数据的长度:", n)
 	if (err != nil) {
-		if (err.Error() == "EOF") { // 发送端断开了
-			fmt.Println("对等方关闭了")
-			os.Exit(1)
-		}
-		fmt.Println(err.Error())
-		panic(err.Error())
-		return n, err
+		return err
 	}
 	time.Sleep(1 * time.Second) // 便于观察这里sleep了一下
 	b.end += n
-	return n, nil
+	return nil
 }
 
 func (buffer *Buffer) Read(msg chan string) (error) {
 	for {
-		buffer.grow()                     // 移动数据
-		_, err := buffer.readFromReader() // 读数据拼接到定额缓存后面
-		if err != nil {
-			fmt.Println(err)
-			return err
+		buffer.grow()                   // 移动数据
+		err1 := buffer.readFromReader() // 读数据拼接到定额缓存后面
+		if err1 != nil {
+			return err1
 		}
 		// 检查定额缓存里面的数据有几个消息(可能不到1个，可能连一个消息头都不够，可能有几个完整消息+一个消息的部分)
-		isBreak := buffer.checkMsg(msg)
-		// 只要读到有完整的消息, isBreak就为true, 跳出去处理
-		if (isBreak) {
-			return nil
+		err2 := buffer.checkMsg(msg)
+		if err2 != nil {
+			return err2
 		}
 	}
 }
 
-func (buffer *Buffer) checkMsg(msg chan string) (bool) {
-	var isBreak bool
+func (buffer *Buffer) checkMsg(msg chan string) (error) {
 	HEADER_LENG := HEAD_SIZE + len(buffer.header)
 	headBuf, err1 := buffer.seek(HEADER_LENG)
-	if err1 != nil { // 一个消息头都不够， 跳出去继续读吧
-		return false
+	if err1 != nil { // 一个消息头都不够， 跳出去继续读吧, 但是这不是一种错误
+		return nil
 	}
 	if (string(headBuf[:len(buffer.header)]) == buffer.header) { // 判断消息头正确性
 
 	} else {
-
+		return errors.New("消息头部不正确")
 	}
-	contentSize := int(binary.BigEndian.Uint16(headBuf[len(buffer.header):]))
+	contentSize := int(binary.BigEndian.Uint32(headBuf[len(buffer.header):]))
 	if (buffer.len() >= contentSize-HEADER_LENG) { // 一个消息体也是够的
 		contentBuf := buffer.read(HEADER_LENG, contentSize) // 把消息读出来，把start往后移
 		msg <- string(contentBuf)
 		// 递归，看剩下的还够一个消息不
-		isBreak = true
-		buffer.checkMsg(msg)
-	} else { // 一个消息体不够的， 跳出去继续读吧
-		isBreak = false
+		err3 := buffer.checkMsg(msg)
+		if err3 != nil {
+			return err3
+		}
 	}
-	return isBreak
+	return nil
 }
